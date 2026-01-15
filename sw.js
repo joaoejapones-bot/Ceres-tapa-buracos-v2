@@ -8,6 +8,7 @@ const urlsToCache = [
   BASE_PATH + 'gestor.html',
   BASE_PATH + 'gestor.js',
   BASE_PATH + 'manifest.json',
+  BASE_PATH + 'icon-512.png',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
