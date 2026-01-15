@@ -2,12 +2,12 @@
   "name": "Ceres Buracos",
   "short_name": "Ceres Buracos",
   "description": "Aplicativo para reportar problemas urbanos em Ceres, GO",
-  "start_url": "/",
+  "start_url": "/Ceres-tapa-buracos-v2/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#667eea",
   "orientation": "portrait-primary",
-  "scope": "/",
+  "scope": "/Ceres-tapa-buracos-v2/",
   "lang": "pt-BR",
   "categories": ["utilities", "government"],
   "icons": [
@@ -29,7 +29,7 @@
       "name": "Reportar Problema",
       "short_name": "Reportar",
       "description": "Abrir formulário para reportar novo problema",
-      "url": "/?action=report",
+      "url": "/Ceres-tapa-buracos-v2/?action=report",
       "icons": [
         {
           "src": "https://cdn-icons-png.flaticon.com/512/3239/3239945.png",

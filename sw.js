@@ -1,12 +1,13 @@
 const CACHE_NAME = 'ceres-buracos-v1';
+const BASE_PATH = '/Ceres-tapa-buracos-v2/';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/config.js',
-  '/script.js',
-  '/gestor.html',
-  '/gestor.js',
-  '/manifest.json',
+  BASE_PATH,
+  BASE_PATH + 'index.html',
+  BASE_PATH + 'config.js',
+  BASE_PATH + 'script.js',
+  BASE_PATH + 'gestor.html',
+  BASE_PATH + 'gestor.js',
+  BASE_PATH + 'manifest.json',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
@@ -95,7 +96,7 @@ self.addEventListener('fetch', function(event) {
               
               // Para requisições de página, retorna página offline
               if (event.request.destination === 'document') {
-                return caches.match('/index.html');
+                return caches.match(BASE_PATH + 'index.html');
               }
             });
         })
@@ -159,7 +160,8 @@ function isStaticResource(request) {
   return staticExtensions.some(ext => url.pathname.endsWith(ext)) ||
          staticDomains.some(domain => url.hostname.includes(domain)) ||
          url.pathname.endsWith('.html') ||
-         url.pathname.endsWith('/');
+         url.pathname.endsWith('/') ||
+         url.pathname.includes('/Ceres-tapa-buracos-v2/');
 }
 
 // Verifica se é uma requisição de API
@@ -263,7 +265,7 @@ self.addEventListener('notificationclick', function(event) {
 
   if (event.action === 'explore') {
     event.waitUntil(
-      clients.openWindow('/')
+      clients.openWindow(BASE_PATH)
     );
   }
 });
