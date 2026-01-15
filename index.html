@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Aplicativo para reportar problemas urbanos em Ceres, GO">
+    <meta name="keywords" content="ceres, buracos, problemas urbanos, reporte, tapa buracos">
+    <meta name="author" content="Prefeitura de Ceres">
+    
+    <!-- Meta Tags PWA -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Ceres Buracos">
+    <meta name="application-name" content="Ceres Buracos">
+    <meta name="msapplication-TileColor" content="#667eea">
+    <meta name="msapplication-config" content="/browserconfig.xml">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3239/3239945.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="https://cdn-icons-png.flaticon.com/512/3239/3239945.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://cdn-icons-png.flaticon.com/512/3239/3239945.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="https://cdn-icons-png.flaticon.com/512/3239/3239945.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="https://cdn-icons-png.flaticon.com/512/3239/3239945.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://cdn-icons-png.flaticon.com/512/3239/3239945.png">
+    <link rel="shortcut icon" href="https://cdn-icons-png.flaticon.com/512/3239/3239945.png">
+    
+    <title>Reporte de Problemas Urbanos - Ceres, GO</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+          crossorigin=""/>
+    
+    <!-- Estilos personalizados -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+
+        .botao-reportar {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .botao-reportar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .botao-reportar:active {
+            transform: scale(0.95);
+        }
+
+        .loading {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .popup-content {
+            text-align: center;
+            padding: 10px;
+        }
+
+        .popup-content h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+
+        .popup-content p {
+            margin: 5px 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .status-pendente {
+            background: #fff3cd;
+            color: #856404;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .marcador-buraco {
+            background: transparent !important;
+            border: none !important;
+            font-size: 24px !important;
+            text-align: center !important;
+            line-height: 30px !important;
+        }
+
+        .marcador-buraco-grande {
+            background: transparent !important;
+            border: none !important;
+            width: 40px !important;
+            height: 40px !important;
+            text-align: center !important;
+            line-height: 40px !important;
+        }
+
+        /* Estilos da barra lateral */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -350px;
+            width: 350px;
+            height: 100vh;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            transition: left 0.3s ease;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.open {
+            left: 0;
+        }
+
+        .sidebar-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-header h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .close-sidebar {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+
+        .close-sidebar:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .report-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .btn-refresh {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-refresh:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-refresh:active {
+            transform: translateY(0);
+        }
+
+        .btn-refresh.loading {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            cursor: not-allowed;
+        }
+
+        .btn-refresh.loading::after {
+            content: '';
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 8px;
+        }
+
+        .stat-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .stat-number {
+            display: block;
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .reports-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .report-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .report-item:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .report-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .report-status {
+            background: #fff3cd;
+            color: #856404;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .report-coords {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-view {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: #0056b3;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .toggle-sidebar {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 1500;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-sidebar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar.open ~ #map {
+            margin-left: 350px;
+        }
+
+        /* Estilos para mobile */
+        @media (max-width: 768px) {
+            .botao-reportar {
+                bottom: 15px;
+                right: 15px;
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Barra lateral esquerda -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>Meus Reportes</h3>
+            <button class="close-sidebar" id="closeSidebar">×</button>
+        </div>
+        <div class="sidebar-content">
+            <div class="report-stats">
+                <div class="stat-item">
+                    <span class="stat-number" id="totalReports">0</span>
+                    <span class="stat-label">Total</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="pendingReports">0</span>
+                    <span class="stat-label">Pendentes</span>
+                </div>
+            </div>
+            <button class="btn-refresh" id="btnRefresh" title="Atualizar Reportes">
+                🔄 Atualizar
+            </button>
+            <div class="reports-list" id="reportsList">
+                <div class="empty-state">
+                    <p>Nenhum reporte encontrado</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botão para abrir sidebar -->
+    <button class="toggle-sidebar" id="toggleSidebar">☰</button>
+
+    <div id="map"></div>
+    <button class="botao-reportar" id="btnReportar" title="Reportar Problema">
+        <span id="btnIcon">📍</span>
+    </button>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+            crossorigin=""></script>
+    
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Arquivos do aplicativo -->
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        // Registrar Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('Service Worker registrado com sucesso:', registration.scope);
+                        
+                        // Verificar por atualizações
+                        registration.addEventListener('updatefound', function() {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', function() {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // Novo Service Worker disponível
+                                    showUpdateNotification();
+                                }
+                            });
+                        });
+                    })
+                    .catch(function(error) {
+                        console.error('Falha ao registrar Service Worker:', error);
+                    });
+            });
+        }
+
+        // Função para mostrar notificação de atualização
+        function showUpdateNotification() {
+            const notification = document.createElement('div');
+            notification.className = 'update-notification';
+            notification.innerHTML = `
+                <div class="update-content">
+                    <i class="fas fa-download"></i>
+                    <span>Nova versão disponível!</span>
+                    <button onclick="updateApp()">Atualizar</button>
+                </div>
+            `;
+            document.body.appendChild(notification);
+        }
+
+        // Função para atualizar o app
+        function updateApp() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    registrations.forEach(function(registration) {
+                        registration.postMessage({ type: 'SKIP_WAITING' });
+                    });
+                });
+                window.location.reload();
+            }
+        }
+
+        // Adicionar estilos para notificação de atualização
+        const style = document.createElement('style');
+        style.textContent = `
+            .update-notification {
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 15px 20px;
+                border-radius: 10px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                z-index: 10000;
+                animation: slideDown 0.5s ease;
+            }
+            
+            .update-content {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            .update-content button {
+                background: white;
+                color: #667eea;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 5px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+            
+            .update-content button:hover {
+                transform: scale(1.05);
+            }
+            
+            @keyframes slideDown {
+                from {
+                    opacity: 0;
+                    transform: translate(-50%, -100%);
+                }
+                to {
+                    opacity: 1;
+                    transform: translate(-50%, 0);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
