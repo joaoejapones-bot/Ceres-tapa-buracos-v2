@@ -322,6 +322,63 @@
             color: #666;
         }
 
+        /* Estilos das Abas */
+        .nav-tabs-container {
+            margin-bottom: -1px;
+        }
+
+        .nav-tabs .nav-link {
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: #666;
+            font-weight: 500;
+            padding: 12px 20px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tabs .nav-link:hover {
+            border-bottom-color: var(--primary-color);
+            color: var(--primary-color);
+            background: none;
+        }
+
+        .nav-tabs .nav-link.active {
+            border-bottom: 3px solid var(--primary-color);
+            color: var(--primary-color);
+            background: none;
+            font-weight: 600;
+        }
+
+        .tab-content {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .btn-confirmar-reparo {
+            background: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-confirmar-reparo:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .btn-confirmar-reparo:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         /* Estilos do mapa miniatura */
         .map-container {
             background: white;
@@ -563,11 +620,24 @@
             </div>
         </div>
 
-        <!-- Filtros -->
+        <!-- Abas de Navegação -->
         <div class="filters-container">
             <div class="row align-items-center">
                 <div class="col-md-6">
-                    <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filtros</h5>
+                    <div class="nav-tabs-container">
+                        <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports-pane" type="button" role="tab">
+                                    <i class="fas fa-list me-2"></i>Reportes
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="works-tab" data-bs-toggle="tab" data-bs-target="#works-pane" type="button" role="tab">
+                                    <i class="fas fa-hard-hat me-2"></i>Contabilidade de Vias
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <div class="d-flex gap-2 justify-content-md-end">
@@ -591,63 +661,146 @@
             </div>
         </div>
 
-        <!-- Mapa e Tabela -->
-        <div class="row">
-            <!-- Mapa Miniatura -->
-            <div class="col-lg-5 mb-4">
-                <div class="map-container">
-                    <div class="map-header">
-                        <h5 class="mb-0"><i class="fas fa-map me-2"></i>Visão Geográfica</h5>
-                        <small class="text-muted">Localização dos reportes</small>
+        <!-- Conteúdo das Abas -->
+        <div class="tab-content" id="mainTabContent">
+            <!-- Aba de Reportes (Original) -->
+            <div class="tab-pane fade show active" id="reports-pane" role="tabpanel" aria-labelledby="reports-tab">
+                <!-- Mapa e Tabela -->
+                <div class="row">
+                    <!-- Mapa Miniatura -->
+                    <div class="col-lg-5 mb-4">
+                        <div class="map-container">
+                            <div class="map-header">
+                                <h5 class="mb-0"><i class="fas fa-map me-2"></i>Visão Geográfica</h5>
+                                <small class="text-muted">Localização dos reportes</small>
+                            </div>
+                            <div id="miniMap" class="mini-map"></div>
+                            <div class="map-legend">
+                                <div class="legend-item">
+                                    <span class="legend-marker">⚠️</span>
+                                    <span>Pendente</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-marker">🔧</span>
+                                    <span>Em Manutenção</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-marker">✅</span>
+                                    <span>Resolvido</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div id="miniMap" class="mini-map"></div>
-                    <div class="map-legend">
-                        <div class="legend-item">
-                            <span class="legend-marker">⚠️</span>
-                            <span>Pendente</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-marker">🔧</span>
-                            <span>Em Manutenção</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-marker">✅</span>
-                            <span>Resolvido</span>
+                    
+                    <!-- Tabela de Reportes -->
+                    <div class="col-lg-7 mb-4">
+                        <div class="table-container">
+                            <div class="loading-spinner" id="loadingSpinner">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Carregando...</span>
+                                </div>
+                                <p class="mt-2">Carregando reportes...</p>
+                            </div>
+                            
+                            <div class="empty-state" id="emptyState" style="display: none;">
+                                <i class="fas fa-inbox"></i>
+                                <h4>Nenhum reporte encontrado</h4>
+                                <p>Não há reportes correspondentes ao filtro selecionado.</p>
+                            </div>
+                            
+                            <div class="table-responsive" id="tableContainer">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Data</th>
+                                            <th>Localização</th>
+                                            <th>Descrição</th>
+                                            <th>Status</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="reportsTableBody">
+                                        <!-- Reportes serão inseridos aqui -->
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Tabela de Reportes -->
-            <div class="col-lg-7 mb-4">
+
+            <!-- Aba de Contabilidade de Vias (Nova) -->
+            <div class="tab-pane fade" id="works-pane" role="tabpanel" aria-labelledby="works-tab">
+                <!-- Resumo de Buracos Tapados -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="stat-card total">
+                            <i class="fas fa-exclamation-triangle fa-2x mb-2" style="color: var(--warning-color);"></i>
+                            <div class="stat-number" id="totalReportados">0</div>
+                            <div class="stat-label">Total de Buracos Reportados</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card resolvido">
+                            <i class="fas fa-check-circle fa-2x mb-2" style="color: var(--success-color);"></i>
+                            <div class="stat-number" id="totalTapados">0</div>
+                            <div class="stat-label">Total de Buracos Tapados</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card manutencao">
+                            <i class="fas fa-bullseye fa-2x mb-2" style="color: var(--primary-color);"></i>
+                            <div class="stat-number" id="metaMes">50</div>
+                            <div class="stat-label">Meta do Mês Atual</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gestão Mensal -->
+                <div class="filters-container mb-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Gestão Mensal</h5>
+                        </div>
+                        <div class="col-md-6">
+                            <select class="form-select" id="monthYearFilter" onchange="filterByMonthYear()">
+                                <option value="">Todos os Períodos</option>
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela de Auditoria Operacional -->
                 <div class="table-container">
-                    <div class="loading-spinner" id="loadingSpinner">
+                    <div class="loading-spinner" id="worksLoadingSpinner" style="display: none;">
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Carregando...</span>
                         </div>
-                        <p class="mt-2">Carregando reportes...</p>
+                        <p class="mt-2">Carregando relatório...</p>
                     </div>
                     
-                    <div class="empty-state" id="emptyState" style="display: none;">
-                        <i class="fas fa-inbox"></i>
-                        <h4>Nenhum reporte encontrado</h4>
-                        <p>Não há reportes correspondentes ao filtro selecionado.</p>
+                    <div class="empty-state" id="worksEmptyState" style="display: none;">
+                        <i class="fas fa-hard-hat"></i>
+                        <h4>Nenhuma obra encontrada</h4>
+                        <p>Não há registros de obras para o período selecionado.</p>
                     </div>
                     
-                    <div class="table-responsive" id="tableContainer">
+                    <div class="table-responsive" id="worksTableContainer">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>Data</th>
                                     <th>Localização</th>
-                                    <th>Descrição</th>
+                                    <th>Data do Reporte</th>
+                                    <th>Data da Conclusão</th>
                                     <th>Status</th>
-                                    <th>Ações</th>
+                                    <th>Ação</th>
                                 </tr>
                             </thead>
-                            <tbody id="reportsTableBody">
-                                <!-- Reportes serão inseridos aqui -->
+                            <tbody id="worksTableBody">
+                                <!-- Obras serão inseridas aqui -->
                             </tbody>
                         </table>
                     </div>
