@@ -315,6 +315,75 @@
             background: #364fc7 !important;
         }
 
+        /* Estilos do rodapé */
+        .app-footer {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999;
+            pointer-events: none;
+        }
+
+        .footer-text {
+            background: rgba(255, 255, 255, 0.95);
+            color: #6c757d;
+            font-size: 11px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 6px 12px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        /* Estilos da seção Sobre */
+        .about-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .about-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin: 0 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .about-title::before {
+            content: "ℹ️";
+            font-size: 18px;
+        }
+
+        .about-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .about-brand {
+            text-align: center;
+        }
+
+        .about-brand strong {
+            color: #4285f4;
+            font-size: 16px;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .about-description {
+            font-size: 12px;
+            color: #666;
+            margin: 0;
+            line-height: 1.4;
+        }
+
         .stat-item {
             flex: 1;
             text-align: center;
@@ -456,10 +525,98 @@
             .botao-reportar .icon {
                 font-size: 18px;
             }
+            
+            .app-footer {
+                bottom: 75px; /* Evita sobrepor o botão flutuante */
+            }
+            
+            .about-section {
+                margin-top: 15px;
+                padding-top: 15px;
+            }
+            
+            .about-brand strong {
+                font-size: 14px;
+            }
+            
+            .about-description {
+                font-size: 11px;
+            }
+        }
+
+        /* Estilos da Splash Screen */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #121212;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+        }
+
+        .splash-screen.fade-out {
+            opacity: 0;
+        }
+
+        .splash-screen.hidden {
+            display: none;
+        }
+
+        .splash-content {
+            text-align: center;
+        }
+
+        .splash-logo {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-size: 4rem;
+            font-weight: 700;
+            color: white;
+            opacity: 0.9;
+            margin: 0;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            animation: fadeInScale 0.8s ease-out;
+        }
+
+        @keyframes fadeInScale {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            100% {
+                opacity: 0.9;
+                transform: scale(1);
+            }
+        }
+
+        /* Mobile adjustments for splash */
+        @media (max-width: 768px) {
+            .splash-logo {
+                font-size: 3rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .splash-logo {
+                font-size: 2.5rem;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Splash Screen -->
+    <div class="splash-screen" id="splashScreen">
+        <div class="splash-content">
+            <h1 class="splash-logo">SJ Tech</h1>
+        </div>
+    </div>
+
     <!-- Barra lateral esquerda -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
@@ -483,6 +640,17 @@
             <div class="reports-list" id="reportsList">
                 <div class="empty-state">
                     <p>Nenhum reporte encontrado</p>
+                </div>
+            </div>
+            
+            <!-- Seção Sobre -->
+            <div class="about-section">
+                <h4 class="about-title">Sobre</h4>
+                <div class="about-content">
+                    <div class="about-brand">
+                        <strong>SJ Tech</strong>
+                        <p class="about-description">Soluções tecnológicas inovadoras para cidades mais inteligentes.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -561,6 +729,30 @@
             }
         }
 
+        // Função para controlar a Splash Screen
+        function initSplashScreen() {
+            const splashScreen = document.getElementById('splashScreen');
+            
+            // Timer para remover a splash screen após 2 segundos
+            setTimeout(() => {
+                // Adiciona classe para fade out
+                splashScreen.classList.add('fade-out');
+                
+                // Remove completamente após a transição de 0.5s
+                setTimeout(() => {
+                    splashScreen.classList.add('hidden');
+                    // Remove o elemento do DOM para liberar memória
+                    splashScreen.remove();
+                    console.log('Splash Screen removida com sucesso');
+                }, 500);
+            }, 2000);
+        }
+
+        // Inicializa a splash screen quando o DOM estiver carregado
+        document.addEventListener('DOMContentLoaded', function() {
+            initSplashScreen();
+        });
+
         // Adicionar estilos para notificação de atualização
         const style = document.createElement('style');
         style.textContent = `
@@ -612,5 +804,10 @@
         `;
         document.head.appendChild(style);
     </script>
+
+    <!-- Rodapé com assinatura -->
+    <footer class="app-footer">
+        <span class="footer-text">Desenvolvido por SJ Tech</span>
+    </footer>
 </body>
 </html>

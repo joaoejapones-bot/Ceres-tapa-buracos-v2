@@ -5,6 +5,206 @@ let isReporting = false;
 let buracosReportados = []; // Armazena os buracos reportados
 let userId; // ID único do usuário atual
 
+// Polígono de atuação da SJ Tech em Ceres
+const ceresPolygon = [
+    [-15.3145199, -49.5888258],
+    [-15.3140827, -49.5888339],
+    [-15.3133641, -49.5898577],
+    [-15.3108516, -49.5898522],
+    [-15.3057340, -49.5829431],
+    [-15.3021928, -49.5785678],
+    [-15.2954389, -49.5753843],
+    [-15.2903481, -49.5866941],
+    [-15.2889504, -49.5954929],
+    [-15.2872200, -49.6024852],
+    [-15.2910373, -49.6055509],
+    [-15.2908603, -49.6180024],
+    [-15.3042161, -49.6181174],
+    [-15.3048164, -49.6275002],
+    [-15.3114835, -49.6272969],
+    [-15.3208297, -49.6229400],
+    [-15.3220161, -49.6122883],
+    [-15.3185381, -49.6030593],
+    [-15.3226692, -49.5928417],
+    [-15.3208549, -49.5895139]
+];
+
+// Função para verificar se um ponto está dentro de um polígono (Algoritmo de Ray-casting)
+function pointInPolygon(point, polygon) {
+    const [lat, lng] = point;
+    let inside = false;
+    
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const [xi, yi] = polygon[i];
+        const [xj, yj] = polygon[j];
+        
+        const intersect = ((yi > lng) !== (yj > lng))
+            && (lat < (xj - xi) * (lng - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+    
+    return inside;
+}
+
+// Função para mostrar modal de área não coberta
+function showAreaModal() {
+    // Remove modal existente se houver
+    const existingModal = document.getElementById('areaModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    const modal = document.createElement('div');
+    modal.id = 'areaModal';
+    modal.innerHTML = `
+        <div class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>⚠️ Fora da Área de Atuação</h3>
+                    <button class="modal-close" onclick="closeAreaModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <p>Ops! Você parece estar fora da área urbana de Ceres.</p>
+                    <p>A SJ Tech atua apenas dentro dos limites do município.</p>
+                    <div class="modal-icon">🗺️</div>
+                </div>
+                <div class="modal-footer">
+                    <button class="modal-btn" onclick="closeAreaModal()">Entendido</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Adiciona estilos se não existirem
+    if (!document.getElementById('modalStyles')) {
+        const styles = document.createElement('style');
+        styles.id = 'modalStyles';
+        styles.textContent = `
+            .modal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                animation: fadeIn 0.3s ease;
+            }
+            
+            .modal-content {
+                background: white;
+                border-radius: 12px;
+                max-width: 400px;
+                width: 90%;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                animation: slideUp 0.3s ease;
+            }
+            
+            .modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 20px 20px 0;
+                border-bottom: 1px solid #e0e0e0;
+            }
+            
+            .modal-header h3 {
+                margin: 0;
+                color: #d32f2f;
+                font-size: 18px;
+            }
+            
+            .modal-close {
+                background: none;
+                border: none;
+                font-size: 24px;
+                cursor: pointer;
+                color: #666;
+                padding: 0;
+                width: 30px;
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                transition: background 0.3s ease;
+            }
+            
+            .modal-close:hover {
+                background: #f5f5f5;
+            }
+            
+            .modal-body {
+                padding: 20px;
+                text-align: center;
+            }
+            
+            .modal-body p {
+                margin: 0 0 10px 0;
+                color: #333;
+                line-height: 1.5;
+            }
+            
+            .modal-icon {
+                font-size: 48px;
+                margin: 15px 0;
+            }
+            
+            .modal-footer {
+                padding: 0 20px 20px;
+                text-align: center;
+            }
+            
+            .modal-btn {
+                background: linear-gradient(135deg, #4285f4 0%, #3b82f6 100%);
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+            
+            .modal-btn:hover {
+                background: linear-gradient(135deg, #364fc7 0%, #2d6bcf 100%);
+                transform: translateY(-1px);
+            }
+            
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            
+            @keyframes slideUp {
+                from { 
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to { 
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        `;
+        document.head.appendChild(styles);
+    }
+}
+
+// Função para fechar o modal
+function closeAreaModal() {
+    const modal = document.getElementById('areaModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
 // Inicializar o aplicativo quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', function() {
     userId = window.gerarIdUsuario(); // Gerar/obter ID do usuário
@@ -28,7 +228,18 @@ function inicializarMapa() {
         maxZoom: 19
     }).addTo(map);
     
+    // Desenhar polígono de atuação da SJ Tech (para visualização/teste)
+    const ceresPolygonForMap = ceresPolygon.map(coord => [coord[0], coord[1]]);
+    L.polygon(ceresPolygonForMap, {
+        color: '#4285f4',
+        weight: 2,
+        opacity: 0.3,
+        fillColor: '#4285f4',
+        fillOpacity: 0.1
+    }).addTo(map);
+    
     console.log('Mapa inicializado com sucesso');
+    console.log('Polígono de Ceres desenhado para validação visual');
 }
 
 // Função para testar conexão com Supabase
@@ -102,6 +313,19 @@ async function reportarBuraco() {
             return; // Sai da função se não conseguir a localização e não estiver em modo de teste
         }
     }
+
+    // VERIFICAR SE ESTÁ DENTRO DA ÁREA DE ATUAÇÃO DA SJ TECH
+    const isInsideCeres = pointInPolygon([lat, lng], ceresPolygon);
+    console.log('Verificação de área:', { lat, lng, isInsideCeres });
+    
+    if (!isInsideCeres) {
+        console.log('Usuário fora da área de atuação da SJ Tech');
+        showAreaModal();
+        return; // Impede o envio se estiver fora da área
+    }
+
+    // Se chegou aqui, está dentro da área - continuar com o fluxo normal
+    console.log('Usuário dentro da área de atuação - prosseguindo com reporte');
 
     // Salvar no Supabase
     const buraco = {
